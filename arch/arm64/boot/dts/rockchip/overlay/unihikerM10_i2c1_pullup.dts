@@ -1,0 +1,26 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/pinctrl/rockchip.h>
+
+/ {
+	compatible = "rockchip,rk3308";
+	fragment@0 {
+		target = <&pinctrl>;
+		__overlay__ {
+			/* Define pcfg_pull_up_smt if not already defined */
+			pcfg_pull_up_smt: pcfg-pull-up-smt {
+				bias-pull-up;
+				input-schmitt-enable;
+			};
+			i2c1 {
+				i2c1_xfer: i2c1-xfer {
+					rockchip,pins =
+						<0 RK_PB3 1 &pcfg_pull_up_smt>,
+						<0 RK_PB4 1 &pcfg_pull_up_smt>;
+				};
+			};
+		};
+	};
+};
+

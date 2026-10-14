@@ -326,6 +326,7 @@ static void dwc2_set_param_phy_type(struct dwc2_hsotg *hsotg)
 static void dwc2_set_param_speed(struct dwc2_hsotg *hsotg)
 {
 	int val;
+	enum usb_device_speed max_speed;
 
 	val = hsotg->params.phy_type == DWC2_PHY_TYPE_PARAM_FS ?
 		DWC2_SPEED_PARAM_FULL : DWC2_SPEED_PARAM_HIGH;
@@ -335,6 +336,24 @@ static void dwc2_set_param_speed(struct dwc2_hsotg *hsotg)
 
 	if (dwc2_is_hs_iot(hsotg))
 		val = DWC2_SPEED_PARAM_HIGH;
+
+	/* Check if maximum-speed is specified in device tree */
+	max_speed = usb_get_maximum_speed(hsotg->dev);
+	if (max_speed != USB_SPEED_UNKNOWN) {
+		/* Override with device tree setting */
+		switch (max_speed) {
+		case USB_SPEED_LOW:
+			val = DWC2_SPEED_PARAM_LOW;
+			break;
+		case USB_SPEED_FULL:
+			val = DWC2_SPEED_PARAM_FULL;
+			break;
+		case USB_SPEED_HIGH:
+		default:
+			val = DWC2_SPEED_PARAM_HIGH;
+			break;
+		}
+	}
 
 	hsotg->params.speed = val;
 }

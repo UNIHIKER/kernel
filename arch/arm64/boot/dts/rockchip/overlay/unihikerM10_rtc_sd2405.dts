@@ -1,0 +1,18 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "rockchip,rk3308";
+	fragment@1 {
+		target = <&i2c1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sd2405@32 {
+				compatible = "whwave,sd3078";
+				reg = <0x32>;
+				status = "okay";
+			};
+		};
+	};
+};

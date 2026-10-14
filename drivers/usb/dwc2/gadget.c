@@ -29,6 +29,7 @@
 #include <linux/usb/gadget.h>
 #include <linux/usb/phy.h>
 #include <linux/usb/composite.h>
+#include <linux/usb/of.h>
 
 
 #include "core.h"
@@ -3262,9 +3263,24 @@ static void dwc2_hsotg_irq_enumdone(struct dwc2_hsotg *hsotg)
 		break;
 
 	case DSTS_ENUMSPD_HS:
-		hsotg->gadget.speed = USB_SPEED_HIGH;
-		ep0_mps = EP0_MPS_LIMIT;
-		ep_mps = 1024;
+		/* Check if max_speed is limited to full-speed or lower */
+		/* Also check params.speed for hardware-level limitation */
+		dev_info(hsotg->dev, "HS detected: max_speed=%d (USB_SPEED_FULL=%d), params.speed=%d\n",
+			 hsotg->gadget.max_speed, USB_SPEED_FULL, hsotg->params.speed);
+		if (hsotg->gadget.max_speed <= USB_SPEED_FULL ||
+		    hsotg->params.speed == DWC2_SPEED_PARAM_FULL) {
+			hsotg->gadget.speed = USB_SPEED_FULL;
+			ep0_mps = EP0_MPS_LIMIT;
+			ep_mps = 1023;
+			dev_info(hsotg->dev, "high-speed device detected, but limited to full-speed (max_speed=%d, params.speed=%d)\n",
+				 hsotg->gadget.max_speed, hsotg->params.speed);
+		} else {
+			hsotg->gadget.speed = USB_SPEED_HIGH;
+			ep0_mps = EP0_MPS_LIMIT;
+			ep_mps = 1024;
+			dev_info(hsotg->dev, "high-speed device allowed (max_speed=%d, params.speed=%d)\n",
+				 hsotg->gadget.max_speed, hsotg->params.speed);
+		}
 		break;
 
 	case DSTS_ENUMSPD_LS:
@@ -5032,17 +5048,24 @@ int dwc2_gadget_init(struct dwc2_hsotg *hsotg)
 		hsotg->params.g_np_tx_fifo_size);
 	dev_dbg(dev, "RXFIFO size: %d\n", hsotg->params.g_rx_fifo_size);
 
-	switch (hsotg->params.speed) {
-	case DWC2_SPEED_PARAM_LOW:
-		hsotg->gadget.max_speed = USB_SPEED_LOW;
-		break;
-	case DWC2_SPEED_PARAM_FULL:
-		hsotg->gadget.max_speed = USB_SPEED_FULL;
-		break;
-	default:
-		hsotg->gadget.max_speed = USB_SPEED_HIGH;
-		break;
+	/* Check if maximum-speed is specified in device tree */
+	hsotg->gadget.max_speed = usb_get_maximum_speed(dev);
+	if (hsotg->gadget.max_speed == USB_SPEED_UNKNOWN) {
+		/* Fall back to params.speed if maximum-speed not specified */
+		switch (hsotg->params.speed) {
+		case DWC2_SPEED_PARAM_LOW:
+			hsotg->gadget.max_speed = USB_SPEED_LOW;
+			break;
+		case DWC2_SPEED_PARAM_FULL:
+			hsotg->gadget.max_speed = USB_SPEED_FULL;
+			break;
+		default:
+			hsotg->gadget.max_speed = USB_SPEED_HIGH;
+			break;
+		}
 	}
+	dev_info(dev, "gadget max_speed set to %s (params.speed=%d)\n",
+		 usb_speed_string(hsotg->gadget.max_speed), hsotg->params.speed);
 
 	hsotg->gadget.ops = &dwc2_hsotg_gadget_ops;
 	hsotg->gadget.name = dev_name(dev);

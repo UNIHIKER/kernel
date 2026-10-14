@@ -284,7 +284,7 @@ config USB_CONFIGFS_ECM
 	depends on USB_CONFIGFS
 	depends on NET
 	select USB_U_ETHER
-	select USB_F_ECM
+	imply USB_F_ECM
 	help
 	  The "Communication Device Class" (CDC) Ethernet Control Model.
 	  That protocol is often avoided with pure Ethernet adapters, in
@@ -306,7 +306,7 @@ config USB_CONFIGFS_RNDIS
 	depends on USB_CONFIGFS
 	depends on NET
 	select USB_U_ETHER
-	select USB_F_RNDIS
+	imply USB_F_RNDIS
 	help
 	   Microsoft Windows XP bundles the "Remote NDIS" (RNDIS) protocol,
 	   and Microsoft provides redistributable binary RNDIS drivers for

@@ -1,0 +1,12 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "rockchip,rk3308";
+	fragment@1 {
+		target = <&uart3>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+};
