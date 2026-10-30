@@ -13,8 +13,9 @@
 	model = "DFROBOT UNIHIKER M10";
 	compatible = "DFRobot,UNIHIKER", "rockchip,rk3308";
     aliases {
-        mmc0 = &sdmmc;  // 将 SD 卡控制器指定为 mmc0
-        mmc1 = &emmc;   // 将 eMMC 控制器指定为 mmc1
+        /* 板载 eMMC 为 mmc0，TF 为 mmc1（与 U-Boot/Rockchip 默认一致） */
+        mmc0 = &emmc;
+        mmc1 = &sdmmc;
     };
 	sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
